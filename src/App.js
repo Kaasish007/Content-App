@@ -1,23 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { supabase, logoutUser } from './supabase';
+import Login from './Login';
+import Navbar from './Navbar';
+import Sidebar from './Sidebar';
 import './App.css';
+import ManualEditor from './ManualEditor';
+import Canvas from './Canvas';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Content Generation');
+  const [activePlatform, setActivePlatform] = useState('LinkedIn');
   const [text, setText] = useState('');
   const [outputs, setOutputs] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('linkedin');
   const [copied, setCopied] = useState(false);
+  const [activeAudience, setAudience] = useState('Professional');
+
+  const platformToOutput = {
+    LinkedIn: 'linkedin',
+    Twitter: 'twitter',
+    Instagram: 'instagram',
+    Blog: 'blog',
+    YouTube: 'newsletter'
+  };
+
+  const platformColors = {
+    YouTube: '#ef4444', LinkedIn: '#3b82f6',
+    Blog: '#10b981', Twitter: '#38bdf8', Instagram: '#a855f7'
+  };
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+    supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+  }, []);
 
   const handleGenerate = async () => {
     if (!text.trim()) return alert('Please enter some content!');
     setLoading(true);
     try {
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
       const res = await axios.post(`${process.env.REACT_APP_API_URL}/api/generate`, {
-        rawText: text
+        rawText: text,
+        platform: activePlatform,
+        audience: activeAudience
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       setOutputs(res.data.outputs);
-      setActiveTab('linkedin');
     } catch (err) {
       alert('Error generating content. Is your backend running?');
     }
@@ -25,100 +63,159 @@ function App() {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(outputs[activeTab]);
+    const key = platformToOutput[activePlatform];
+    navigator.clipboard.writeText(outputs[key]);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const tabs = ['linkedin', 'twitter', 'instagram', 'blog', 'newsletter'];
+  const handleLogout = async () => {
+    await logoutUser();
+    setOutputs(null);
+    setText('');
+  };
+
+  if (authLoading) return (
+    <div style={{ minHeight: '100vh', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+      Loading...
+    </div>
+  );
+
+  if (!user) return <Login onLogin={setUser} />;
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', fontFamily: 'sans-serif' }}>
-      
-      {/* Header */}
-      <div style={{ background: '#1e293b', padding: '20px', textAlign: 'center', borderBottom: '1px solid #334155' }}>
-        <h1 style={{ margin: 0, fontSize: '28px', color: '#60a5fa' }}>✨ ContentAI</h1>
-        <p style={{ margin: '5px 0 0', color: '#94a3b8' }}>Transform any content into social media posts instantly</p>
-      </div>
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-        
-        {/* Input Section */}
-        <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', marginBottom: '24px' }}>
-          <h2 style={{ margin: '0 0 16px', color: '#e2e8f0' }}>📝 Paste Your Content</h2>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Paste your blog post, article, video transcript, or any text here..."
-            style={{
-              width: '100%', height: '160px', background: '#0f172a', color: 'white',
-              border: '1px solid #334155', borderRadius: '8px', padding: '12px',
-              fontSize: '14px', resize: 'vertical', boxSizing: 'border-box'
-            }}
-          />
-          <button
-            onClick={handleGenerate}
-            disabled={loading}
-            style={{
-              marginTop: '12px', padding: '12px 32px', background: loading ? '#475569' : '#3b82f6',
-              color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px',
-              cursor: loading ? 'not-allowed' : 'pointer', width: '100%'
-            }}
-          >
-            {loading ? '⏳ Generating all 5 formats...' : '🚀 Generate Content'}
-          </button>
+      <Navbar
+        user={user}
+        onLogout={handleLogout}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
+
+      <Sidebar
+  activePlatform={activePlatform}
+  setActivePlatform={(platform) => {
+    setActivePlatform(platform);
+    setOutputs(null);
+    setText('');
+    setActiveTab('Content Generation');
+  }}
+  onCanvasClick={() => setActiveTab('The Canvas')}
+/>
+
+      <div style={{ marginLeft: '220px', marginTop: '60px', padding: '32px' }}>
+
+        {/* Platform Header */}
+        <div style={{ marginBottom: '24px' }}>
+          <h2 style={{ margin: 0, fontSize: '24px', color: platformColors[activePlatform] }}>
+            {activePlatform === 'YouTube' && '🎥'}
+            {activePlatform === 'LinkedIn' && '💼'}
+            {activePlatform === 'Blog' && '📝'}
+            {activePlatform === 'Twitter' && '🐦'}
+            {activePlatform === 'Instagram' && '📸'}
+            {' '}{activePlatform} Content
+          </h2>
+          <p style={{ margin: '4px 0 0', color: '#475569', fontSize: '14px' }}>
+            Generate tailored content for {activePlatform}
+          </p>
         </div>
 
-        {/* Output Section */}
-        {outputs && (
-          <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px' }}>
-            <h2 style={{ margin: '0 0 16px', color: '#e2e8f0' }}>🎯 Generated Content</h2>
-            
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
-              {tabs.map(tab => (
+        {activeTab === 'Content Generation' && (
+          <div style={{ maxWidth: '800px' }}>
+
+            {/* Audience Selector */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+              {['Professional', 'Student', 'Creator', 'Business'].map(audience => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  key={audience}
+                  onClick={() => setAudience(audience)}
                   style={{
-                    padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-                    background: activeTab === tab ? '#3b82f6' : '#334155',
-                    color: 'white', fontSize: '13px', textTransform: 'capitalize'
+                    padding: '8px 16px', borderRadius: '8px', border: 'none',
+                    cursor: 'pointer', fontSize: '13px', fontWeight: 500,
+                    background: activeAudience === audience ? platformColors[activePlatform] : '#1e293b',
+                    color: activeAudience === audience ? 'white' : '#94a3b8',
+                    transition: 'all 0.2s'
                   }}
                 >
-                  {tab === 'linkedin' && '💼 '}
-                  {tab === 'twitter' && '🐦 '}
-                  {tab === 'instagram' && '📸 '}
-                  {tab === 'blog' && '📝 '}
-                  {tab === 'newsletter' && '📧 '}
-                  {tab}
+                  {audience === 'Professional' && '👔 '}
+                  {audience === 'Student' && '🎓 '}
+                  {audience === 'Creator' && '🎨 '}
+                  {audience === 'Business' && '🏢 '}
+                  {audience}
                 </button>
               ))}
             </div>
 
-            {/* Content */}
-            <div style={{
-              background: '#0f172a', borderRadius: '8px', padding: '16px',
-              whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#e2e8f0', minHeight: '200px'
-            }}>
-              {outputs[activeTab]}
+            {/* Input */}
+            <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: `1px solid ${platformColors[activePlatform]}33` }}>
+              <h3 style={{ margin: '0 0 16px', color: '#e2e8f0' }}>📝 Paste Your Content</h3>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={`Paste your content here for ${activePlatform} — ${activeAudience} audience...`}
+                style={{
+                  width: '100%', height: '160px', background: '#0f172a',
+                  color: 'white', border: '1px solid #334155', borderRadius: '8px',
+                  padding: '12px', fontSize: '14px', resize: 'vertical', boxSizing: 'border-box'
+                }}
+              />
+              <button
+                onClick={handleGenerate}
+                disabled={loading}
+                style={{
+                  marginTop: '12px', padding: '12px 32px',
+                  background: loading ? '#475569' : platformColors[activePlatform],
+                  color: 'white', border: 'none', borderRadius: '8px',
+                  fontSize: '16px', cursor: loading ? 'not-allowed' : 'pointer', width: '100%'
+                }}
+              >
+                {loading ? '⏳ Generating...' : `🚀 Generate ${activePlatform} Content for ${activeAudience}s`}
+              </button>
             </div>
 
-            {/* Copy Button */}
-            <button
-              onClick={handleCopy}
-              style={{
-                marginTop: '12px', padding: '10px 24px',
-                background: copied ? '#10b981' : '#334155',
-                color: 'white', border: 'none', borderRadius: '8px',
-                cursor: 'pointer', fontSize: '14px'
-              }}
-            >
-              {copied ? '✅ Copied!' : '📋 Copy to Clipboard'}
-            </button>
+            {/* Output */}
+            {outputs && (
+              <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', border: `1px solid ${platformColors[activePlatform]}33` }}>
+                <h3 style={{ margin: '0 0 16px', color: '#e2e8f0' }}>🎯 Generated {activePlatform} Content</h3>
+
+                <div style={{
+                  background: '#0f172a', borderRadius: '8px', padding: '16px',
+                  whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#e2e8f0', minHeight: '200px'
+                }}>
+                  {outputs[platformToOutput[activePlatform]]}
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                  <button
+                    onClick={handleCopy}
+                    style={{
+                      padding: '10px 24px',
+                      background: copied ? '#10b981' : '#334155',
+                      color: 'white', border: 'none', borderRadius: '8px',
+                      cursor: 'pointer', fontSize: '14px'
+                    }}
+                  >
+                    {copied ? '✅ Copied!' : '📋 Copy'}
+                  </button>
+                  <button
+                    style={{
+                      padding: '10px 24px',
+                      background: '#334155',
+                      color: 'white', border: 'none', borderRadius: '8px',
+                      cursor: 'pointer', fontSize: '14px'
+                    }}
+                  >
+                    🎨 Publish to Canvas
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
-      </div>
+
+{activeTab === 'Manual Writing' && <ManualEditor />}
+{activeTab === 'The Canvas' && <Canvas />}      </div>
     </div>
   );
 }
