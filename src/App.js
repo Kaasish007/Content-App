@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 import './App.css';
 import ManualEditor from './ManualEditor';
 import Canvas from './Canvas';
+import Profile from './Profile';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -18,6 +19,8 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [activeAudience, setAudience] = useState('Professional');
+  const [showProfile, setShowProfile] = useState(false);
+  console.log('showProfile state:', showProfile);
 
   const platformToOutput = {
     LinkedIn: 'linkedin',
@@ -87,11 +90,12 @@ function App() {
     <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', fontFamily: 'sans-serif' }}>
 
       <Navbar
-        user={user}
-        onLogout={handleLogout}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+  user={user}
+  onLogout={handleLogout}
+  activeTab={activeTab}
+  setActiveTab={setActiveTab}
+  onProfileClick={() => setShowProfile(true)}
+/>
 
       <Sidebar
   activePlatform={activePlatform}
@@ -216,6 +220,7 @@ function App() {
 
 {activeTab === 'Manual Writing' && <ManualEditor />}
 {activeTab === 'The Canvas' && <Canvas />}      </div>
+      {showProfile && <Profile user={user} onClose={() => setShowProfile(false)} />}
     </div>
   );
 }
