@@ -8,6 +8,7 @@ import './App.css';
 import ManualEditor from './ManualEditor';
 import Canvas from './Canvas';
 import Profile from './Profile';
+import DMs from './DMs';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -20,7 +21,7 @@ function App() {
   const [copied, setCopied] = useState(false);
   const [activeAudience, setAudience] = useState('Professional');
   const [showProfile, setShowProfile] = useState(false);
-  console.log('showProfile state:', showProfile);
+  const [showDMs, setShowDMs] = useState(false);
 
   const platformToOutput = {
     LinkedIn: 'linkedin',
@@ -90,27 +91,27 @@ function App() {
     <div style={{ minHeight: '100vh', background: '#0f172a', color: 'white', fontFamily: 'sans-serif' }}>
 
       <Navbar
-  user={user}
-  onLogout={handleLogout}
-  activeTab={activeTab}
-  setActiveTab={setActiveTab}
-  onProfileClick={() => setShowProfile(true)}
-/>
+        user={user}
+        onLogout={handleLogout}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onProfileClick={() => setShowProfile(true)}
+        onDMClick={() => setShowDMs(true)}
+      />
 
       <Sidebar
-  activePlatform={activePlatform}
-  setActivePlatform={(platform) => {
-    setActivePlatform(platform);
-    setOutputs(null);
-    setText('');
-    setActiveTab('Content Generation');
-  }}
-  onCanvasClick={() => setActiveTab('The Canvas')}
-/>
+        activePlatform={activePlatform}
+        setActivePlatform={(platform) => {
+          setActivePlatform(platform);
+          setOutputs(null);
+          setText('');
+          setActiveTab('Content Generation');
+        }}
+        onCanvasClick={() => setActiveTab('The Canvas')}
+      />
 
       <div style={{ marginLeft: '220px', marginTop: '60px', padding: '32px' }}>
 
-        {/* Platform Header */}
         <div style={{ marginBottom: '24px' }}>
           <h2 style={{ margin: 0, fontSize: '24px', color: platformColors[activePlatform] }}>
             {activePlatform === 'YouTube' && '🎥'}
@@ -128,7 +129,6 @@ function App() {
         {activeTab === 'Content Generation' && (
           <div style={{ maxWidth: '800px' }}>
 
-            {/* Audience Selector */}
             <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
               {['Professional', 'Student', 'Creator', 'Business'].map(audience => (
                 <button
@@ -151,7 +151,6 @@ function App() {
               ))}
             </div>
 
-            {/* Input */}
             <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', marginBottom: '24px', border: `1px solid ${platformColors[activePlatform]}33` }}>
               <h3 style={{ margin: '0 0 16px', color: '#e2e8f0' }}>📝 Paste Your Content</h3>
               <textarea
@@ -178,18 +177,15 @@ function App() {
               </button>
             </div>
 
-            {/* Output */}
             {outputs && (
               <div style={{ background: '#1e293b', borderRadius: '12px', padding: '24px', border: `1px solid ${platformColors[activePlatform]}33` }}>
                 <h3 style={{ margin: '0 0 16px', color: '#e2e8f0' }}>🎯 Generated {activePlatform} Content</h3>
-
                 <div style={{
                   background: '#0f172a', borderRadius: '8px', padding: '16px',
                   whiteSpace: 'pre-wrap', lineHeight: '1.6', color: '#e2e8f0', minHeight: '200px'
                 }}>
                   {outputs[platformToOutput[activePlatform]]}
                 </div>
-
                 <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
                   <button
                     onClick={handleCopy}
@@ -202,14 +198,11 @@ function App() {
                   >
                     {copied ? '✅ Copied!' : '📋 Copy'}
                   </button>
-                  <button
-                    style={{
-                      padding: '10px 24px',
-                      background: '#334155',
-                      color: 'white', border: 'none', borderRadius: '8px',
-                      cursor: 'pointer', fontSize: '14px'
-                    }}
-                  >
+                  <button style={{
+                    padding: '10px 24px', background: '#334155',
+                    color: 'white', border: 'none', borderRadius: '8px',
+                    cursor: 'pointer', fontSize: '14px'
+                  }}>
                     🎨 Publish to Canvas
                   </button>
                 </div>
@@ -218,9 +211,13 @@ function App() {
           </div>
         )}
 
-{activeTab === 'Manual Writing' && <ManualEditor />}
-{activeTab === 'The Canvas' && <Canvas />}      </div>
+        {activeTab === 'Manual Writing' && <ManualEditor />}
+        {activeTab === 'The Canvas' && <Canvas />}
+
+      </div>
+
       {showProfile && <Profile user={user} onClose={() => setShowProfile(false)} />}
+      {showDMs && <DMs user={user} onClose={() => setShowDMs(false)} />}
     </div>
   );
 }

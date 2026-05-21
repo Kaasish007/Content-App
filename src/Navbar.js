@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick }) {
+function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick, onDMClick }) {
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
@@ -9,13 +9,11 @@ function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick }) {
       padding: '0 24px', height: '60px'
     }}>
 
-      {/* Left — Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
         <h1 style={{ margin: 0, fontSize: '20px', background: 'linear-gradient(135deg, #60a5fa, #a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 800 }}>
           ✨ ContentAI
         </h1>
 
-        {/* Center Tabs */}
         <div style={{ display: 'flex', gap: '4px', background: '#1e293b', borderRadius: '8px', padding: '4px' }}>
           {['Content Generation', 'Manual Writing'].map(tab => (
             <button
@@ -25,8 +23,7 @@ function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick }) {
                 padding: '6px 16px', borderRadius: '6px', border: 'none',
                 background: activeTab === tab ? '#3b82f6' : 'transparent',
                 color: activeTab === tab ? 'white' : '#94a3b8',
-                cursor: 'pointer', fontSize: '13px', fontWeight: 500,
-                transition: 'all 0.2s'
+                cursor: 'pointer', fontSize: '13px', fontWeight: 500
               }}
             >
               {tab}
@@ -35,24 +32,18 @@ function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick }) {
         </div>
       </div>
 
-      {/* Center — Nav Links */}
       <div style={{ display: 'flex', gap: '24px' }}>
         {['Explore', 'About Us', 'The Canvas'].map(link => (
           <span
             key={link}
             style={{ color: '#94a3b8', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}
-            onMouseEnter={e => e.target.style.color = '#60a5fa'}
-            onMouseLeave={e => e.target.style.color = '#94a3b8'}
           >
             {link}
           </span>
         ))}
       </div>
 
-      {/* Right — Search + Settings + Avatar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-
-        {/* Search Bar */}
         <input
           placeholder="🔍 Search..."
           style={{
@@ -62,15 +53,19 @@ function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick }) {
           }}
         />
 
-        {/* Settings */}
-        <span style={{ fontSize: '20px', cursor: 'pointer', color: '#94a3b8' }}
-          onMouseEnter={e => e.target.style.color = '#60a5fa'}
-          onMouseLeave={e => e.target.style.color = '#94a3b8'}
+        <button
+          onClick={onDMClick}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#94a3b8' }}
+        >
+          💬
+        </button>
+
+        <button
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#94a3b8' }}
         >
           ⚙️
-        </span>
+        </button>
 
-        {/* Avatar — opens full profile */}
         <div
           onClick={onProfileClick}
           style={{
