@@ -8,7 +8,7 @@ const platforms = [
   { name: 'Instagram', icon: '📸', color: '#a855f7' },
 ];
 
-function Sidebar({ activePlatform, setActivePlatform, onCanvasClick }) {
+function Sidebar({ activePlatform, setActivePlatform, onCanvasClick, starBalance, onStarsClick }) {
   return (
     <div style={{
       position: 'fixed', left: 0, top: '60px', bottom: 0,
@@ -59,7 +59,6 @@ function Sidebar({ activePlatform, setActivePlatform, onCanvasClick }) {
         </div>
       ))}
 
-      {/* Divider */}
       <div style={{ borderTop: '1px solid #1e293b', margin: '8px 0' }} />
 
       <p style={{ color: '#475569', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 8px 8px' }}>
@@ -93,10 +92,12 @@ function Sidebar({ activePlatform, setActivePlatform, onCanvasClick }) {
         <span style={{ color: '#94a3b8', fontSize: '14px' }}>Leaderboard</span>
       </div>
 
-      {/* Stars balance at bottom */}
-      <div style={{ marginTop: 'auto', background: '#1e293b', borderRadius: '10px', padding: '12px' }}>
+      <div
+        onClick={onStarsClick}
+        style={{ marginTop: 'auto', background: '#1e293b', borderRadius: '10px', padding: '12px', cursor: 'pointer' }}
+      >
         <p style={{ margin: 0, color: '#fbbf24', fontSize: '13px', fontWeight: 600 }}>⭐ Your Stars</p>
-        <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '12px' }}>0 stars earned</p>
+        <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '12px' }}>{starBalance || 0} stars earned</p>
       </div>
     </div>
   );

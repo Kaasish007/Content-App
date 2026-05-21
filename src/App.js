@@ -9,6 +9,8 @@ import ManualEditor from './ManualEditor';
 import Canvas from './Canvas';
 import Profile from './Profile';
 import DMs from './DMs';
+import Stars from './Stars';
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -22,6 +24,8 @@ function App() {
   const [activeAudience, setAudience] = useState('Professional');
   const [showProfile, setShowProfile] = useState(false);
   const [showDMs, setShowDMs] = useState(false);
+  const [starBalance, setStarBalance] = useState(0);
+  const [showStars, setShowStars] = useState(false);
 
   const platformToOutput = {
     LinkedIn: 'linkedin',
@@ -37,10 +41,21 @@ function App() {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setAuthLoading(false);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+  setUser(session?.user ?? null);
+  setAuthLoading(false);
+  if (session?.user) {
+    // Claim daily login star
+    await axios.post(`${process.env.REACT_APP_API_URL}/api/stars/daily-login`, {}, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
     });
+    // Get star balance
+    const { data } = await axios.get(`${process.env.REACT_APP_API_URL}/api/stars/balance`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+    setStarBalance(data.balance);
+  }
+});
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
@@ -100,15 +115,17 @@ function App() {
       />
 
       <Sidebar
-        activePlatform={activePlatform}
-        setActivePlatform={(platform) => {
-          setActivePlatform(platform);
-          setOutputs(null);
-          setText('');
-          setActiveTab('Content Generation');
-        }}
-        onCanvasClick={() => setActiveTab('The Canvas')}
-      />
+  activePlatform={activePlatform}
+  setActivePlatform={(platform) => {
+    setActivePlatform(platform);
+    setOutputs(null);
+    setText('');
+    setActiveTab('Content Generation');
+  }}
+  onCanvasClick={() => setActiveTab('The Canvas')}
+  starBalance={starBalance}
+  onStarsClick={() => setShowStars(true)}
+/>
 
       <div style={{ marginLeft: '220px', marginTop: '60px', padding: '32px' }}>
 
@@ -218,6 +235,7 @@ function App() {
 
       {showProfile && <Profile user={user} onClose={() => setShowProfile(false)} />}
       {showDMs && <DMs user={user} onClose={() => setShowDMs(false)} />}
+      {showStars && <Stars user={user} onClose={() => setShowStars(false)} />}
     </div>
   );
 }
