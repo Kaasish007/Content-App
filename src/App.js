@@ -11,6 +11,7 @@ import Profile from './Profile';
 import DMs from './DMs';
 import Stars from './Stars';
 import Pricing from './Pricing';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 
 function App() {
@@ -240,6 +241,7 @@ function App() {
       {showDMs && <DMs user={user} onClose={() => setShowDMs(false)} />}
       {showStars && <Stars user={user} onClose={() => setShowStars(false)} />}
       {showPricing && <Pricing onClose={() => setShowPricing(false)} />}
+      <SpeedInsights />
     </div>
   );
 }
