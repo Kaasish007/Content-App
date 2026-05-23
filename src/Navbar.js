@@ -1,6 +1,6 @@
 import React from 'react';
 
-function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick, onDMClick }) {
+function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick, onDMClick, onPricingClick }) {
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1000,
@@ -33,13 +33,14 @@ function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick, onDMC
       </div>
 
       <div style={{ display: 'flex', gap: '24px' }}>
-        {['Explore', 'About Us', 'The Canvas'].map(link => (
+        {['Explore', 'About Us', 'The Canvas', 'Pricing'].map(link => (
           <span
-            key={link}
-            style={{ color: '#94a3b8', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}
-          >
-            {link}
-          </span>
+  key={link}
+  onClick={link === 'Pricing' ? onPricingClick : undefined}
+  style={{ color: '#94a3b8', cursor: 'pointer', fontSize: '14px', fontWeight: 500 }}
+>
+  {link}
+</span>
         ))}
       </div>
 
@@ -83,4 +84,4 @@ function Navbar({ user, onLogout, activeTab, setActiveTab, onProfileClick, onDMC
   );
 }
 
-export default Navbar;
+export default Navbar;	

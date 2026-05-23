@@ -10,6 +10,7 @@ import Canvas from './Canvas';
 import Profile from './Profile';
 import DMs from './DMs';
 import Stars from './Stars';
+import Pricing from './Pricing';
 
 
 function App() {
@@ -26,6 +27,7 @@ function App() {
   const [showDMs, setShowDMs] = useState(false);
   const [starBalance, setStarBalance] = useState(0);
   const [showStars, setShowStars] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
 
   const platformToOutput = {
     LinkedIn: 'linkedin',
@@ -112,6 +114,7 @@ function App() {
         setActiveTab={setActiveTab}
         onProfileClick={() => setShowProfile(true)}
         onDMClick={() => setShowDMs(true)}
+        onPricingClick={() => setShowPricing(true)}
       />
 
       <Sidebar
@@ -236,6 +239,7 @@ function App() {
       {showProfile && <Profile user={user} onClose={() => setShowProfile(false)} />}
       {showDMs && <DMs user={user} onClose={() => setShowDMs(false)} />}
       {showStars && <Stars user={user} onClose={() => setShowStars(false)} />}
+      {showPricing && <Pricing onClose={() => setShowPricing(false)} />}
     </div>
   );
 }
