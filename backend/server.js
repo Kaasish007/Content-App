@@ -5,8 +5,16 @@ require('dotenv').config();
 
 const app = express();
 
-// This lets your React app talk to this server
-app.use(cors({ origin: 'http://localhost:3000' }));
+// Allow both old UI, new UI, and Vercel
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://content-app-kryj.vercel.app'
+  ],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Test route - visit http://localhost:5000/api/health
@@ -20,6 +28,7 @@ app.use('/api/content', require('./routes/content'));
 app.use('/api/generate', require('./routes/generate'));
 app.use('/api/stripe', require('./routes/stripe'));
 app.use('/api/stars', require('./routes/stars'));
+app.use('/api/follow', require('./routes/follow'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
