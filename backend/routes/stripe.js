@@ -14,10 +14,8 @@ router.post('/checkout', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
     const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
-
     const { plan } = req.body;
     if (!prices[plan]) return res.status(400).json({ error: 'Invalid plan' });
-
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
@@ -27,8 +25,66 @@ router.post('/checkout', async (req, res) => {
       customer_email: user.email,
       metadata: { userId: user.id, plan }
     });
-
     res.json({ url: session.url });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Webhook — saves plan to profiles after successful Stripe payment
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const userId = session.metadata?.userId;
+    const plan = session.metadata?.plan;
+    if (userId && plan) {
+      await supabase
+        .from('profiles')
+        .update({ plan })
+        .eq('user_id', userId);
+    }
+  }
+
+  if (event.type === 'customer.subscription.deleted') {
+    const subscription = event.data.object;
+    const customer = await stripe.customers.retrieve(subscription.customer);
+    if (customer?.email) {
+      const { data: { users } } = await supabase.auth.admin.listUsers();
+      const user = users?.find(u => u.email === customer.email);
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ plan: 'spark' })
+          .eq('user_id', user.id);
+      }
+    }
+  }
+
+  res.json({ received: true });
+});
+
+// Get current user plan
+router.get('/my-plan', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (!user) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('user_id', user.id)
+      .single();
+
+    res.json({ plan: profile?.plan || 'spark' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
